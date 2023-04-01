@@ -1,0 +1,23 @@
+{
+    "title": "Ma première frise",
+    "events": [
+        {
+            "title": "Ma première date",
+            "type": "date",
+            "start": "26/03/2023",
+            "end": "",
+            "weight": 1,
+            "place": "Chez moi",
+            "cardID": 103975
+        },
+        {
+            "title": "Ma première période",
+            "type": "period",
+            "start": "26/03/2023",
+            "end": "31/03/2023",
+            "weight": 2,
+            "place": "CentraleSupelec",
+            "cardID": 149734
+        }
+    ]
+}
