@@ -1,0 +1,25 @@
+# Permet de lancer un environnement de test pour NodeJS et MySQL
+
+# démarrer les container : docker compose up -d
+# arrêter les container : docker compose down
+
+services:
+  app:
+    image: node:19
+    command: npm run test # à la fin du démarrage du container, exécute la commande précisée dans package.json -> scripts -> test
+    ports:
+      - 8080:80 # relie le port 8080 de la machine hôte avec le port 80 du container
+    working_dir: /app
+    volumes:
+      - ./:/app # bind mounts : le dossier local est monter dans le dossier /app du container et toute modification d'un côté entraine une modification de l'autre côté (idéal pour le développement)
+  
+  mysql:
+    image: mysql:8.0
+    volumes:
+      - db-test:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: test # définit le mot de passe de l'utilisateur root lors de la création du volume (donc seulement la première fois)
+      MYSQL_DATABASE: db-test # définit la base de données à créer lors de la création du volume (donc seulement la première fois)
+    
+volumes:
+  db-test:
