@@ -1,0 +1,702 @@
+openapi: 3.0.0
+info:
+  title: Chronopedia private API
+  description: Private API for the website chronopedia.org
+  version: 1.0.0
+servers:
+- url: https://chronopedia.org/api/v1
+  description: Based URL for requesting the API
+- url: /api/v1
+  description: Relative URL for development
+security:
+- cookieAuth: []
+tags:
+- name: timeline
+  description: Everything about timelines
+- name: card
+  description: Everything about cards
+- name: user
+  description: Everything about users
+paths:
+  /timeline:
+    get:
+      tags:
+      - timeline
+      summary: To get a timeline
+      description: Return the desired timeline in JSON format identified by its id
+      operationId: getTimeline
+      parameters:
+      - name: timelineID
+        in: query
+        description: The id of the desired timeline
+        required: true
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/timelineID'
+      responses:
+        "200":
+          description: A JSON file describing the timeline
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Timeline'
+      x-swagger-router-controller: Timeline
+    post:
+      tags:
+      - timeline
+      summary: To create a timeline
+      description: Create an empty timeline and return its id if the timeline has
+        been created successfully
+      operationId: createTimeline
+      requestBody:
+        description: Timeline's title
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/timeline_body'
+        required: true
+      responses:
+        "201":
+          description: The timeline has been created and it returns the id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_201'
+      x-swagger-router-controller: Timeline
+    delete:
+      tags:
+      - timeline
+      summary: To delete a timeline
+      description: Delete the specified timeline
+      operationId: deleteTimeline
+      parameters:
+      - name: timelineID
+        in: query
+        description: The id of the desired timeline
+        required: true
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/timelineID'
+      responses:
+        "204":
+          description: Timeline deleted successfully
+      x-swagger-router-controller: Timeline
+  /timeline/move:
+    put:
+      tags:
+      - timeline
+      summary: To move a timeline from a folder to an other
+      description: Return only a status code depending if the timeline has been moved
+        successfully
+      operationId: moveTimeline
+      parameters:
+      - name: timelineID
+        in: query
+        description: The id of the desired timeline
+        required: true
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/timelineID'
+      requestBody:
+        description: The id of the new parent
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/timeline_move_body'
+        required: true
+      responses:
+        "200":
+          description: Timeline moved successfully
+      x-swagger-router-controller: Timeline
+  /timeline/rename:
+    put:
+      tags:
+      - timeline
+      summary: To change the title of a timeline
+      description: Return only a status code depending if the timeline has been renamed
+        successfully
+      operationId: renameTimeline
+      parameters:
+      - name: timelineID
+        in: query
+        description: The id of the desired timeline
+        required: true
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/timelineID'
+      requestBody:
+        description: The new title of the timeline
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/timeline_rename_body'
+        required: true
+      responses:
+        "200":
+          description: Timeline renamed successfully
+      x-swagger-router-controller: Timeline
+  /timeline/share:
+    put:
+      tags:
+      - timeline
+      summary: To share a timeline with a group of person
+      description: To share a timeline with a group of person identified by an array
+        of user's id
+      operationId: shareTimeline
+      parameters:
+      - name: timelineID
+        in: query
+        description: The id of the desired timeline
+        required: true
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/timelineID'
+      - name: message
+        in: query
+        description: Precise if you want to warn people with an email when you share
+          the timeline with them
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      requestBody:
+        description: "A JSON array of the ids of people we want to share the timeline\
+          \ with, and their role"
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/timeline_share_body'
+        required: true
+      responses:
+        "200":
+          description: Timeline renamed successfully
+      x-swagger-router-controller: Timeline
+  /card:
+    get:
+      tags:
+      - card
+      summary: To get a card
+      description: Ask for the id of the card in parameters and return the desired
+        card
+      operationId: getCard
+      parameters:
+      - name: cardID
+        in: query
+        description: "To modify a card, we need the card's id but also the id of the\
+          \ timeline the card belongs to."
+        required: true
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/cardID'
+      responses:
+        "200":
+          description: Card in one file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+                x-content-type: application/octet-stream
+      x-swagger-router-controller: Card
+    put:
+      tags:
+      - card
+      summary: To edit the content of a card
+      description: Save the new content of the card
+      operationId: editCard
+      parameters:
+      - name: cardID
+        in: query
+        description: "To modify a card, we need the card's id but also the id of the\
+          \ timeline the card belongs to."
+        required: true
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/cardID'
+      requestBody:
+        description: The new file to save
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+        required: true
+      responses:
+        "200":
+          description: Card saved successfully
+      x-swagger-router-controller: Card
+    post:
+      tags:
+      - card
+      summary: To create a card in a timeline
+      description: Send a form with all the necessary informations to create a card
+        and return the id of the card
+      operationId: createCard
+      parameters:
+      - name: timelineID
+        in: query
+        description: The id of the desired timeline
+        required: true
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/timelineID'
+      requestBody:
+        description: The informations to create the cards
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/card_body'
+            example:
+              title: My first date
+              category: date
+              start: 26/03/2023
+              end: ""
+              weight: 1
+              place: Home
+        required: true
+      responses:
+        "201":
+          description: Card created successfully and return the id of the newly created
+            card in JSON format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/timeline_move_body'
+      x-swagger-router-controller: Card
+    delete:
+      tags:
+      - card
+      summary: To delete a card in a timeline
+      description: Send the id of the card to delete and return only a status code
+        depending if the card has been deleted successfully
+      operationId: deleteCard
+      parameters:
+      - name: cardID
+        in: query
+        description: "To modify a card, we need the card's id but also the id of the\
+          \ timeline the card belongs to."
+        required: true
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/cardID'
+      responses:
+        "204":
+          description: Card deleted successfully
+      x-swagger-router-controller: Card
+  /card/editProperties:
+    put:
+      tags:
+      - card
+      summary: To change properties of a card
+      description: Send a JSON object specifying the property to edit and its new
+        value to edit the card
+      operationId: editProperties
+      parameters:
+      - name: cardID
+        in: query
+        description: "To modify a card, we need the card's id but also the id of the\
+          \ timeline the card belongs to."
+        required: true
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/cardID'
+      requestBody:
+        description: JSON object specifying the property to edit and its new value
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/card_editProperties_body'
+            examples:
+              changeTitle:
+                summary: Change the title
+                value:
+                  property: title
+                  value: My new title
+              changeType:
+                summary: "Change the type of the event (only two possibilities: date\
+                  \ or epoch)"
+                value:
+                  property: type
+                  value: epoch
+        required: true
+      responses:
+        "200":
+          description: Card's title updated successfully
+      x-swagger-router-controller: Card
+  /user:
+    get:
+      tags:
+      - user
+      summary: To get informations about a user
+      description: Ask for informations about a specific user with its id
+      operationId: getUser
+      parameters:
+      - name: userID
+        in: query
+        description: Id of a user
+        required: true
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/userID'
+      responses:
+        "200":
+          description: User's informations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+      x-swagger-router-controller: User
+    put:
+      tags:
+      - user
+      summary: To edit user's informations
+      description: "To change the username, the email or the password of a user (one\
+        \ change by request)"
+      operationId: editUser
+      parameters:
+      - name: userID
+        in: query
+        description: Id of a user
+        required: true
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/userID'
+      requestBody:
+        description: A JSON object with the field to change and its new value
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/user_body'
+      responses:
+        "200":
+          description: User's informations modified successfully
+      x-swagger-router-controller: User
+    post:
+      tags:
+      - user
+      summary: To create a user
+      description: Create a user with the informations provided in the requestBody
+        and return its id
+      operationId: createUser
+      requestBody:
+        description: The informations needed to create the user (in JSON format)
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/user_body_1'
+        required: true
+      responses:
+        "201":
+          description: User created successfully and return the id of the newly created
+            user in JSON format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/userID'
+      x-swagger-router-controller: User
+    delete:
+      tags:
+      - user
+      summary: To delete a user
+      description: Delete a user identified by its id
+      operationId: deleteUser
+      parameters:
+      - name: userID
+        in: query
+        description: Id of a user
+        required: true
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/userID'
+      responses:
+        "204":
+          description: User deleted successfully
+      x-swagger-router-controller: User
+  /login:
+    post:
+      summary: To login to your account
+      description: Send your credentials and get the authentification cookie for the
+        session
+      operationId: login
+      requestBody:
+        description: A JSON object containing your credentials
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/login_body'
+        required: true
+      responses:
+        "200":
+          description: |
+            Successfully authenticated. The session ID is returned in a cookie named `JSESSIONID`. You need to include this cookie in subsequent requests.
+          headers:
+            Set-Cookie:
+              style: simple
+              explode: false
+              schema:
+                type: string
+                example: JSESSIONID=abcde12345; Path=/; HttpOnly
+      security: []
+      x-swagger-router-controller: Default
+components:
+  schemas:
+    Timeline:
+      type: object
+      properties:
+        title:
+          type: string
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/Timeline_events'
+      example:
+        title: My first timeline
+        events:
+        - title: My first date
+          category: date
+          start: 26/03/2023
+          end: ""
+          weight: 1
+          place: Home
+          cardID: 103975
+        - title: My first epoch
+          category: epoch
+          start: 26/03/2023
+          end: 31/03/2023
+          weight: 2
+          place: CentraleSupelec
+          cardID: 149734
+    Id:
+      minimum: 1
+      type: integer
+      format: int64
+      example: 130849
+    timelineID:
+      type: object
+      properties:
+        resource:
+          type: string
+          enum:
+          - timeline
+        id:
+          $ref: '#/components/schemas/Id'
+      example:
+        resource: timeline
+        id: 108473
+    timeline_body:
+      type: object
+      properties:
+        title:
+          type: string
+          example: My first timeline
+    inline_response_201:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+      example:
+        id: 130849
+    timeline_move_body:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+      example:
+        id: 130849
+    timeline_rename_body:
+      type: object
+      properties:
+        title:
+          type: string
+      example:
+        title: My new title
+    timeline_share_body:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        role:
+          type: string
+          enum:
+          - editor
+          - commentator
+          - reader
+    card_cardID:
+      type: object
+      properties:
+        resource:
+          type: string
+          enum:
+          - card
+        id:
+          $ref: '#/components/schemas/Id'
+    cardID:
+      type: object
+      properties:
+        cardID:
+          $ref: '#/components/schemas/card_cardID'
+        timelineID:
+          $ref: '#/components/schemas/card_cardID'
+      example:
+        cardID:
+          resource: card
+          id: 102849
+        timelineID:
+          resource: timeline
+          id: 102840
+    card_body:
+      type: object
+      properties:
+        title:
+          type: string
+        category:
+          type: string
+          enum:
+          - date
+          - epoch
+        start:
+          type: string
+        end:
+          type: string
+        weight:
+          minimum: 1
+          type: integer
+        place:
+          type: string
+    card_editProperties_body:
+      type: object
+      properties:
+        property:
+          type: string
+          enum:
+          - title
+          - type
+          - start
+          - end
+          - weight
+          - place
+        value:
+          type: string
+    userID:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+      example:
+        id: 130849
+    inline_response_200:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+      example:
+        username: John
+        email: john@company.com
+    user_body:
+      type: object
+      properties:
+        field:
+          type: string
+          example: username
+          enum:
+          - username
+          - email
+          - password
+        value:
+          type: string
+          example: john
+    user_body_1:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+      example:
+        username: John
+        email: jogn@company.com
+        password: kh242LJKkjh23lk
+    login_body:
+      type: object
+      properties:
+        email:
+          type: string
+          example: john@company.com
+        password:
+          type: string
+          example: mlk2L3JlkLKJH2Llkj2
+    Timeline_events:
+      type: object
+      properties:
+        title:
+          type: string
+        category:
+          type: string
+          enum:
+          - date
+          - epoch
+        start:
+          type: string
+        end:
+          type: string
+        weight:
+          minimum: 1
+          type: integer
+        place:
+          type: string
+        cardID:
+          $ref: '#/components/schemas/Id'
+  parameters:
+    timelineID:
+      name: timelineID
+      in: query
+      description: The id of the desired timeline
+      required: true
+      style: form
+      explode: true
+      schema:
+        $ref: '#/components/schemas/timelineID'
+    cardID:
+      name: cardID
+      in: query
+      description: "To modify a card, we need the card's id but also the id of the\
+        \ timeline the card belongs to."
+      required: true
+      style: form
+      explode: true
+      schema:
+        $ref: '#/components/schemas/cardID'
+    userID:
+      name: userID
+      in: query
+      description: Id of a user
+      required: true
+      style: form
+      explode: true
+      schema:
+        $ref: '#/components/schemas/userID'
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      name: JSESSIONID
+      in: cookie
